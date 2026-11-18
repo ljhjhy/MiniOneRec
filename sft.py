@@ -134,7 +134,8 @@ def train(
     if not train_from_scratch:
         model = AutoModelForCausalLM.from_pretrained(
             base_model,
-            torch_dtype=torch.bfloat16,
+            ##torch_dtype=torch.bfloat16,
+            torch_dtype=torch.float32,
         )
     else:
         config = AutoConfig.from_pretrained(base_model)
@@ -235,22 +236,29 @@ def train(
             per_device_train_batch_size=micro_batch_size,
             per_device_eval_batch_size=micro_batch_size,
             gradient_accumulation_steps=gradient_accumulation_steps,
-            warmup_steps=20,
+            ##warmup_steps=20,
+            warmup_steps=2,
             num_train_epochs=num_epochs,
             learning_rate=learning_rate,
-            bf16=True,
+            ##bf16=True,
+            bf16=False,
+            ##add
+            fp16=True,
             logging_steps=1,
             optim="adamw_torch",
-            eval_strategy="steps",
-            eval_steps=eval_step, 
-            save_strategy="steps",
-            save_steps=eval_step,
+            ##eval_strategy="steps",
+            eval_strategy="epoch",
+            ##eval_steps=eval_step, 
+            ##save_strategy="steps",
+            save_strategy="epoch",
+            ##save_steps=eval_step,
             output_dir=output_dir,
             save_total_limit=1,
             load_best_model_at_end=True,
             ddp_find_unused_parameters=False if ddp else None,
             group_by_length=group_by_length,
-            report_to=None,
+            ##report_to=None,这个是自动使用已安装的实验记录工具，如WandB，要改成下一行，就是关闭这些记录工具
+            report_to="none",
         ),
         data_collator=transformers.DataCollatorForSeq2Seq(
             tokenizer, pad_to_multiple_of=8, return_tensors="pt", padding=True
